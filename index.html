@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Module MANAGER — ClickGUI</title>
+  <title>DragonClient Module Manager</title>
+  <link rel="icon" href="https://cdn.discordapp.com/attachments/1422487512311660615/1422508866956034189/raw.png?ex=68dcee1e&is=68db9c9e&hm=0084d676f511ecd64c8fe3f018290f1c32a803413db5924a9b1b821c3a7214fb&" type="image/png">
   <style>
     :root{
       --bg0:#0b0b0c; --bg1:#121214; --tx:#e9e9ee; --sub:#b9b9c4; --b1:#2a2a32;
@@ -326,4 +327,5 @@
   document.getElementById('copy').onclick=async()=>{ try{ await navigator.clipboard.writeText(JSON.stringify(cfg(),null,2)); alert('Copied'); }catch{ alert('Copy failed'); } };
   </script>
 </body>
+
 </html>
