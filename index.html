@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Module MANAGER — ClickGUI</title>
+  <style>
+    :root{
+      --bg0:#0b0b0c; --bg1:#121214; --tx:#e9e9ee; --sub:#b9b9c4; --b1:#2a2a32;
+      --green:#44d27b; --red:#ff5b5b; --panel:#18181c; --hi:#3d6aff;
+      --rgb1:#ff3b3b; --rgb2:#ff6a6a; --rgb3:#ff9a9a; --rgb4:#ff6a6a; --rgb5:#ff3b3b;
+      --wrap:1200px;
+    }
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(110% 140% at 10% 10%, #0e0e12 0%, #0b0b0c 60%) fixed;
+         color:var(--tx); font-family: ui-rounded, "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;}
+
+    /* Animations */
+    @keyframes fadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
+    @keyframes pop { 0%{transform:scale(.98)} 70%{transform:scale(1.02)} 100%{transform:scale(1)} }
+    @keyframes rgbMove { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+    @keyframes shimmer { 0%{opacity:.9} 50%{opacity:1} 100%{opacity:.9} }
+    @keyframes float { 0%{transform:translateY(0)} 50%{transform:translateY(-2px)} 100%{transform:translateY(0)} }
+    @keyframes slideIn { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:translateY(0)} }
+    @keyframes slideOut { from{opacity:1; height:var(--h,auto)} to{opacity:0; height:0} }
+    @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.04)} 100%{transform:scale(1)} }
+
+    /* Shared layout */
+    .wrap{max-width:var(--wrap);margin:0 auto;padding:0 16px}
+
+    /* Landing (center EVERYTHING) */
+    #landing{min-height:100dvh;display:flex;align-items:center;justify-content:center;text-align:center}
+    .hero{animation:fadeIn .5s ease both}
+    .title{font-size:44px;font-weight:900;letter-spacing:.4px;margin:0 0 8px 0}
+    .subtitle{color:var(--sub);font-size:16px;margin:0 0 24px 0}
+    .heroTop{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px}
+    .logo{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(255,100,30,.35));animation:pulse 3s ease-in-out infinite}
+    .mini{display:inline-block;background:linear-gradient(180deg,#1a1a1f,#151519);border:1px solid var(--b1);border-radius:16px;padding:18px 24px;box-shadow:0 12px 32px rgba(0,0,0,.45);animation:float 6s ease-in-out infinite}
+    .mini h3{margin:0 0 8px 0;font-size:16px}
+    .miniLine{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--rgb1),var(--rgb2),var(--rgb3),var(--rgb4),var(--rgb5));background-size:200% 100%;animation:rgbMove 2.2s linear infinite;margin:8px 0}
+    .enter{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--b1);background:#1c1c22;color:var(--tx);padding:10px 14px;border-radius:12px;font-size:14px;cursor:pointer;transition:transform .15s ease, background .2s ease,border-color .2s ease}
+    .enter:hover{transform:translateY(-1px)}
+
+    /* Topbar GUI (centered) */
+    .top{position:sticky;top:0;background:rgba(20,20,26,.75);backdrop-filter:blur(8px);border-bottom:1px solid var(--b1);z-index:10}
+    .top .row{display:flex;gap:10px;align-items:center;justify-content:center;padding:8px 0}
+    .btn{background:#1c1c22;border:1px solid var(--b1);color:var(--tx);padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer;transition:transform .15s ease, background .2s ease, border-color .2s ease;animation:pop .25s ease both}
+    .btn:hover{transform:translateY(-1px)}
+
+    /* GUI area (centered) */
+    #gui{display:none;min-height:100dvh;padding-bottom:28px}
+    .centerNote{text-align:center;color:var(--sub);font-size:12px;margin-top:6px}
+
+    /* Category block */
+    .gridCenter{display:flex;justify-content:center}
+    .hscroll{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding:12px;animation:fadeIn .5s ease both;max-width:var(--wrap)}
+    .hscroll::-webkit-scrollbar{height:8px}
+    .hscroll::-webkit-scrollbar-track{background:#111}
+    .hscroll::-webkit-scrollbar-thumb{background:#2d2d36;border-radius:8px}
+
+    .cat{flex:0 0 240px;}
+    .ctitle{font-weight:800;letter-spacing:.2px;font-size:18px;margin:0 0 6px 0;text-align:center;animation:shimmer 3s ease-in-out infinite}
+    .cline{height:3px;border-radius:3px;margin:0 auto 8px auto;max-width:200px;background:linear-gradient(90deg,var(--rgb1),var(--rgb2),var(--rgb3),var(--rgb4),var(--rgb5));background-size:200% 100%;animation:rgbMove 2.2s linear infinite}
+
+    .mods{display:flex;flex-direction:column;gap:6px}
+    .mod{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;border-radius:8px;background:linear-gradient(180deg,#1a1a1f,#16161a);border:1px solid var(--b1);user-select:none;cursor:pointer;transition:background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease, filter .2s ease;animation:fadeIn .35s ease both, float 6s ease-in-out infinite}
+    .mod:hover{transform:translateY(-1px)}
+    .mod .left{display:flex;align-items:center;gap:6px}
+    .mod .name{font-size:13px}
+    .chip{font-size:11px;opacity:.9;padding:2px 6px;border-radius:999px;border:1px solid #2a2a32;background:#1b1b20}
+    .status{font-size:11px;opacity:.9}
+    .mod.enabled{background:linear-gradient(180deg,#1f2b22,#151c16); border-color:#245c3c; box-shadow:0 0 0 1px rgba(68,210,123,.08)}
+    .mod.enabled .status{color:var(--green)}
+    .mod.disabled{background:linear-gradient(180deg,#241a1a,#171213); border-color:#5c2424}
+    .mod.disabled .status{color:var(--red)}
+
+    .opts{margin:2px 0 8px 0;padding:8px;border-left:2px solid #2a2a33;background:rgba(24,24,30,.6);border-radius:8px;display:none;animation:slideIn .2s ease both}
+    .opts.show{display:block}
+    .opts.closing{animation:slideOut .22s ease-in forwards; overflow:hidden}
+    .row{display:flex;align-items:center;gap:8px;margin:8px 0}
+    .row label{font-size:12px;color:var(--sub);min-width:140px;text-align:right}
+    .row input[type="number"], .row input[type="text"], .row select{width:140px;background:#121218;border:1px solid var(--b1);border-radius:6px;color:var(--tx);font-size:12px;padding:4px 6px}
+    .row input[type="range"]{width:160px}
+
+    /* Help icon with blur tooltip */
+    .help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:6px;border-radius:50%;border:1px solid #2a2a32;background:#1b1b20;font-size:11px;color:#cfd3ff;position:relative;cursor:help}
+    .help::after{content:attr(data-tip); position:absolute; left:50%; bottom:125%; transform:translateX(-50%); white-space:pre-wrap; min-width:220px; max-width:280px; padding:10px 12px; border:1px solid #3a3a44; border-radius:12px; color:#e8e9ff; background:rgba(14,14,20,.6); backdrop-filter:blur(10px); box-shadow:0 8px 24px rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .15s ease; font-size:12px; line-height:1.25; text-align:left}
+    .help:hover::after{opacity:1}
+  </style>
+</head>
+<body>
+  <!-- Landing / Home -->
+  <section id="landing">
+    <div class="wrap hero">
+      <div class="heroTop">
+        <img class="logo" src="https://cdn.discordapp.com/attachments/1422487512311660615/1422508866956034189/raw.png?ex=68dcee1e&is=68db9c9e&hm=0084d676f511ecd64c8fe3f018290f1c32a803413db5924a9b1b821c3a7214fb&.png" alt="logo" />
+        <h1 class="title">ᴅʀᴀɢᴏɴᴄʟɪᴇɴᴛ ᴍᴏᴅᴜʟᴇᴍᴀɴᴀɢᴇʀ</h1>
+      </div>
+      <p class="subtitle">ᴄᴇɴᴛʀᴀʟ ʜᴜʙ ᴏꜰ ᴅʀᴀɢᴏɴᴄʟɪᴇɴᴛ ᴍᴏᴅᴜʟᴇꜱ. ᴄᴏɴꜰɪɢᴜʀᴇ, ᴇxᴘᴏʀᴛ ᴀɴᴅ ʟɪɴᴋ ɪᴛ ᴡɪᴛʜ ᴛʜᴇ ʙᴏᴛ.</p>
+      <div class="mini">
+        <h3>ᴄʟɪᴄᴋɢᴜɪ ᴘʀᴇᴠɪᴇᴡ</h3>
+        <div class="miniLine"></div>
+        <p style="margin:0 0 12px 0;color:#cfcfe6;font-size:13px">ᴏᴘᴇɴ ᴛʜᴇ ᴍᴀɴᴀɢᴇʀ ᴛᴏ ᴛᴏɢɢʟᴇ ᴍᴏᴅᴜʟᴇꜱ, ꜱᴇᴛ ᴋᴇʏʙɪɴᴅꜱ ᴀɴᴅ ꜰɪɴᴇ‑ᴛᴜɴᴇ ᴏᴘᴛɪᴏɴꜱ.</p>
+        <button id="enter" class="enter">ᴏᴘᴇɴ ᴄʟɪᴄᴋɢᴜɪ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUI Page -->
+  <section id="gui">
+    <div class="top">
+      <div class="wrap row">
+        <button class="btn" id="back">← ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ</button>
+        <button class="btn" id="export">ᴅᴏᴡɴʟᴏᴀᴅ .ᴊsᴏɴ</button>
+        <button class="btn" id="copy">  ᴄᴏᴘʏ ᴊꜱᴏɴ</button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="centerNote">ʟᴇꜰᴛ ᴄʟɪᴄᴋ: ᴏɴ/ᴏꜰꜰ · ʀɪɢʜᴛ ᴄʟɪᴄᴋ: ᴏᴘᴛɪᴏɴꜱ · ⌨ ᴋᴇʏʙɪɴᴅ · ʜᴏʀɪᴢᴏɴᴛᴀʟ ꜱᴄʀᴏʟʟ</div>
+    </div>
+
+    <div class="gridCenter">
+      <div class="hscroll wrap" id="root"></div>
+    </div>
+  </section>
+
+  <script>
+  // --- Navigation (single file) ---
+  const landing = document.getElementById('landing');
+  const gui = document.getElementById('gui');
+  document.getElementById('enter').onclick = ()=>{ landing.style.display='none'; gui.style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); };
+  document.getElementById('back').onclick = ()=>{ gui.style.display='none'; landing.style.display='flex'; window.scrollTo({top:0,behavior:'smooth'}); };
+
+  // === Descriptions ===
+  const DESC = {
+    modules: {
+      triggerbot: 'Auto-clicks when your crosshair is on a valid target.\nLimits: CPS 1–16, Max distance 0–8 blocks.',
+      aimassist:  'Soft aim assistance within FOV.\nLimits: FOV 1–110°, Strength 0–10, Smoothing 0–10.',
+      autowtap:   'Automatically releases and re-presses W to keep combos.\nLimits: Release 0–300 ms, Min velocity 0–1.',
+      jumpreset:  'Times a jump to reset knockback and extend combos.\nLimits: Timing/Cooldown 0–300 ms.',
+      autorefil:  'Automatically refills hotbar slots from inventory when items run low.',
+      autopot:    'Throws a potion when health goes under a threshold.\nLimits: Health 1–20, Preferred slot 1–9.',
+      autosprint: 'Keeps sprinting automatically (hold/toggle).',
+      freecam:    'Detaches the camera to fly around (visual).\nLimits: Speed 0.1–5.',
+      speed:      'Increases movement speed. Modes: vanilla / strafe.\nLimits: Multiplier 1–3.',
+      elytratarget:'Locks view onto a target while flying with Elytra.\nLimits: Distance 1–100.',
+      bunnyhop:   'Auto jump/strafe to maintain speed.',
+      discordrpc: 'Discord Rich Presence (ON/OFF).',
+      betterhurtcam:'Tweaks hurt camera effect.\nLimits: Intensity 0–1.',
+      entityculling:'Skips rendering off-screen/hidden entities (FPS boost).',
+      handnoclip: 'Hand rendering ignores block clipping (visual only).',
+      ghosthand:  'Interact through whitelisted blocks (visual).',
+      scroller:   'Adjust mouse wheel behaviour.\nLimits: Sensitivity 0.1–2.',
+      mousetweaks:'Inventory QoL tweaks (drag-split, wheel move).',
+      autohotbar: 'Auto-manages hotbar by preferred slots and thresholds.',
+      zoom:       'Zoom key with optional smoothing.\nLimits: Level 1–10.'
+    },
+    options: {
+      cps: 'Clicks per second. Range: 1–16.',
+      maxDistance: 'Maximum reach distance in blocks. Range: 0–8.',
+      onlyOnTarget: 'Only click if crosshair is on a valid target.',
+      requireCrosshair: 'Require crosshair over hitbox to trigger.',
+      fov: 'Field of view for assist (degrees). Range: 1–110.',
+      strength: 'Assist force. Range: 0–10.',
+      smoothing: 'How softly the aim moves. Range: 0–10.',
+      AimVertical: 'Vertical assist (true/false).',
+      releaseMs: 'Time to release W (milliseconds). Range: 0–300.',
+      minVelocity: 'Minimum player velocity to trigger. Range: 0–1.',
+      timingMs: 'Jump timing (ms). Range: 0–300.',
+      cooldownMs: 'Cooldown after trigger (ms). Range: 0–300.',
+      threshold: 'Refill threshold (items left in slot before refilling). Suggested: 0–8.',
+      hotbarSize: 'Hotbar size (slots). Usually 9.',
+      healthThreshold: 'Auto-pot below this health. Range: 1–20.',
+      splashOnly: 'Use splash potions only.',
+      preferSlot: 'Preferred hotbar slot for pots. Range: 1–9.',
+      mode: 'Operating mode (depends on module).',
+      showHud: 'Show small HUD indicator.',
+      speed: 'Freecam speed. Range: 0.1–5.',
+      multiplier: 'Speed multiplier. Range: 1–3.',
+      lockOn: 'Lock onto nearest target.',
+      aimLead: 'Lead the target while flying.',
+      autoJump: 'Automatically jump when moving.',
+      strafeAssist: 'Assist with lateral strafes.',
+      intensity: 'Hurt camera intensity. Range: 0–1.',
+      aggressive: 'More aggressive culling.',
+      visualOnly: 'Visual effect only.',
+      whitelistBlocks: 'Comma-separated block list. Example: glass,leaves',
+      invert: 'Invert scroll direction.',
+      sensitivity: 'Scroll sensitivity. Range: 0.1–2.',
+      dragSplit: 'Split stacks by dragging.',
+      wheelTweak: 'Move items with mouse wheel.',
+      refillThreshold: 'Hotbar refill threshold.',
+      preferSlots: 'Preferred slot mapping, e.g. 1:sword,2:rod,3:blocks',
+      level: 'Zoom level. Range: 1–10.',
+      smooth: 'Smooth zoom animation.',
+      holdToUse: 'Hold key to zoom (if off: toggle).'
+    }
+  };
+
+  // === Catalog ===
+  const CATEGORIES = [
+    { id:'combat', label:'Combat', modules:[
+      { id:'triggerbot',  label:'Trigger Bot',  enabled:false, keybind:'', settings:{ cps:12, maxDistance:3.8, onlyOnTarget:true, requireCrosshair:true } },
+      { id:'aimassist',   label:'Aim Assist',   enabled:false, keybind:'', settings:{ fov:35, strength:0.6, smoothing:0.4, AimVertical:false } },
+      { id:'autowtap',    label:'Auto W-Tap',   enabled:false, keybind:'', settings:{ releaseMs:120, minVelocity:0.08 } },
+      { id:'jumpreset',   label:'Jump Reset',   enabled:false, keybind:'', settings:{ timingMs:180, edgeOnly:true, cooldownMs:120 } },
+      { id:'autorefil',   label:'Auto Refill',  enabled:false, keybind:'', settings:{ threshold:2, hotbarSize:9 } },
+      { id:'autopot',     label:'Auto Pot',     enabled:false, keybind:'', settings:{ healthThreshold:8, splashOnly:true, preferSlot:5 } },
+    ]},
+    { id:'movement', label:'Movement', modules:[
+      { id:'autosprint',   label:'Auto Sprint',   enabled:false, keybind:'', settings:{ mode:'toggle', showHud:true } },
+      { id:'freecam',      label:'Freecam',       enabled:false, keybind:'', settings:{ speed:1.4, noclip:true } },
+      { id:'speed',        label:'Speed',         enabled:false, keybind:'', settings:{ mode:'vanilla', multiplier:1.3, strafeAssist:true } },
+      { id:'elytratarget', label:'Elytra Target', enabled:false, keybind:'', settings:{ lockOn:true, maxDistance:30, aimLead:true } },
+      { id:'bunnyhop',     label:'Bunny Hop',     enabled:false, keybind:'', settings:{ autoJump:true, strafeAssist:true } },
+    ]},
+    { id:'hud', label:'HUD', modules:[
+      { id:'discordrpc', label:'Discord RPC', enabled:false, keybind:'', settings:{} },
+    ]},
+    { id:'render', label:'Render', modules:[
+      { id:'betterhurtcam', label:'Better Hurt Cam', enabled:false, keybind:'', settings:{ intensity:0.6 } },
+      { id:'entityculling', label:'Entity Culling',  enabled:false, keybind:'', settings:{ aggressive:false } },
+      { id:'handnoclip',    label:'Hand NoClip',     enabled:false, keybind:'', settings:{ visualOnly:true } },
+      { id:'ghosthand',     label:'Ghost Hand',      enabled:false, keybind:'', settings:{ whitelistBlocks:'glass,leaves' } },
+    ]},
+    { id:'utility', label:'Utility', modules:[
+      { id:'scroller',    label:'Scroller',      enabled:false, keybind:'', settings:{ invert:false, sensitivity:1.0 } },
+      { id:'mousetweaks', label:'Mouse Tweaks',  enabled:false, keybind:'', settings:{ dragSplit:true, wheelTweak:true } },
+      { id:'autohotbar',  label:'Auto Hotbar',   enabled:false, keybind:'', settings:{ refillThreshold:2, preferSlots:'1:sword,2:rod,3:blocks' } },
+      { id:'zoom',        label:'Zoom',          enabled:false, keybind:'', settings:{ level:3.0, smooth:true, holdToUse:false } },
+    ]},
+  ];
+
+  const LIMITS = {
+    triggerbot: { cps:{min:1,max:16,step:1}, maxDistance:{min:0,max:8,step:0.1} },
+    aimassist:  { fov:{min:1,max:110,step:1}, strength:{min:0,max:10,step:0.1}, smoothing:{min:0,max:10,step:0.1} },
+    autopot:    { healthThreshold:{min:1,max:20,step:1}, preferSlot:{min:1,max:9,step:1} },
+    autowtap:   { releaseMs:{min:0,max:300,step:10}, minVelocity:{min:0,max:1,step:0.01} },
+    jumpreset:  { timingMs:{min:0,max:300,step:10}, cooldownMs:{min:0,max:300,step:10} },
+    autosprint: {},
+    freecam:    { speed:{min:0.1,max:5,step:0.1} },
+    speed:      { multiplier:{min:1,max:3,step:0.1} },
+    elytratarget:{ maxDistance:{min:1,max:100,step:1} },
+    scroller:   { sensitivity:{min:0.1,max:2,step:0.1} },
+    zoom:       { level:{min:1,max:10,step:0.5} },
+  };
+
+  // === Render ClickGUI ===
+  const root = document.getElementById('root');
+  CATEGORIES.forEach(cat=>{
+    const col = cDiv('cat');
+    col.append(cDiv('ctitle', cat.label));
+    col.append(cDiv('cline'));
+    const list = cDiv('mods');
+
+    cat.modules.forEach(m=>{
+      const row = cDiv('mod disabled');
+      const left = cDiv('left');
+      const name = cDiv('name', m.label);
+      const help = helpIcon(DESC.modules[m.id]||'No description.');
+      const chip = cDiv('chip', m.keybind ? ('⌨ '+m.keybind.toUpperCase()) : '⌨ set');
+      left.append(name, help, chip);
+      const status = cDiv('status','OFF');
+      row.append(left, status);
+
+      row.addEventListener('click', (e)=>{ if(e.button!==0) return; m.enabled=!m.enabled; applyState(row, status, m.enabled); });
+
+      const hasSettings = Object.keys(m.settings||{}).length>0;
+      const opts = hasSettings ? buildOptions(m) : null;
+      row.addEventListener('contextmenu',(e)=>{
+        e.preventDefault(); if(!hasSettings) return;
+        if(opts.classList.contains('show')){ opts.style.setProperty('--h', opts.scrollHeight+'px'); opts.classList.remove('show'); opts.classList.add('closing'); opts.addEventListener('animationend',()=>opts.classList.remove('closing'),{once:true}); }
+        else { opts.classList.add('show'); }
+      });
+
+      chip.addEventListener('click',(e)=>{
+        e.stopPropagation(); chip.textContent='⌨ press key…'; chip.style.borderColor='var(--hi)';
+        const onKey=(ev)=>{ ev.preventDefault(); if(ev.key==='Escape'){ m.keybind=''; chip.textContent='⌨ set'; cleanup(); return; } m.keybind=ev.key.length===1?ev.key.toUpperCase():ev.key; chip.textContent='⌨ '+m.keybind.toUpperCase(); cleanup(); };
+        function cleanup(){ chip.style.borderColor=''; window.removeEventListener('keydown', onKey, true);} window.addEventListener('keydown', onKey, true);
+      });
+
+      list.append(row); if(opts) list.append(opts);
+    });
+
+    col.append(list); root.append(col);
+  });
+
+  function helpIcon(text){ const s=document.createElement('span'); s.className='help'; s.textContent='?'; s.setAttribute('data-tip', text); return s; }
+  function cDiv(cls, text){ const d=document.createElement('div'); if(cls) d.className=cls; if(text!==undefined) d.textContent=text; return d; }
+  function applyState(row, right, on){ row.classList.toggle('enabled', on); row.classList.toggle('disabled', !on); right.textContent = on ? 'ON' : 'OFF'; }
+
+  function buildOptions(m){
+    const box = cDiv('opts');
+    Object.entries(m.settings||{}).forEach(([k,v])=>{
+      const r = cDiv('row');
+      const leftWrap=document.createElement('div'); leftWrap.style.display='flex'; leftWrap.style.alignItems='center'; leftWrap.style.gap='6px';
+      const l = document.createElement('label'); l.textContent = pretty(k); leftWrap.append(l, helpIcon(DESC.options[k]||'No details.'));
+      let input; const limits=(LIMITS[m.id]||{})[k]||null;
+      if(typeof v==='boolean'){ input = select(['true','false'], String(v), (val)=>{ m.settings[k]=(val==='true'); }); }
+      else if(typeof v==='number'){
+        const num=document.createElement('input'); num.type='number'; num.step=limits? String(limits.step):(String(v).includes('.')?'0.1':'1'); if(limits){ if(limits.min!==undefined) num.min=String(limits.min); if(limits.max!==undefined) num.max=String(limits.max);} num.value=String(v);
+        const rng=document.createElement('input'); rng.type='range'; rng.step=num.step; rng.min=limits? String(limits.min??0):'0'; rng.max=limits? String(limits.max??100):'100'; rng.value=String(v);
+        num.oninput=()=>{ let n=parseFloat(num.value||'0'); if(limits){ if(n<limits.min) n=limits.min; if(n>limits.max) n=limits.max; } m.settings[k]=n; rng.value=String(n); };
+        rng.oninput=()=>{ num.value=rng.value; num.oninput(); };
+        const wrap=cDiv(); wrap.style.display='flex'; wrap.style.gap='8px'; wrap.append(num,rng); input=wrap;
+      } else { if(k==='mode'){ const choices=(m.id==='speed')?['vanilla','strafe']:(m.id==='autosprint'?['hold','toggle']:[String(v)]); input=select(choices,String(v),(val)=>{ m.settings[k]=val; }); } else { const t=document.createElement('input'); t.type='text'; t.value=String(v); t.oninput=()=>m.settings[k]=t.value; input=t; } }
+      r.append(leftWrap, input); box.append(r);
+    });
+    return box;
+  }
+  function select(arr, value, onChange){ const s=document.createElement('select'); arr.forEach(x=>{ const o=document.createElement('option'); o.value=x; o.textContent=x; s.appendChild(o); }); s.value=value; s.onchange=()=>onChange(s.value); return s; }
+  function pretty(key){ return key
+    .replace(/([a-z])([A-Z])/g,'$1 $2')
+    .replace(/^cps$/i,'CPS')
+    .replace(/^fov$/i,'FOV')
+    .replace(/^aimvertical$/i,'Vertical assist')
+    .replace(/^hotbarSize$/,'Hotbar size (slots)')
+    .replace(/^preferSlot$/,'Preferred slot')
+    .replace(/^minVelocity$/,'Min velocity')
+    .replace(/^maxDistance$/,'Max distance'); }
+
+  // Export / Copy
+  function cfg(){ return { generatedAt:new Date().toISOString(), categories:CATEGORIES.map(c=>({ id:c.id, modules:c.modules.map(m=>({ id:m.id, enabled:!!m.enabled, keybind:(m.keybind||''), settings:m.settings||{} })) })) }; }
+  document.getElementById('export').onclick=()=>{ const blob=new Blob([JSON.stringify(cfg(),null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='config.json'; a.click(); URL.revokeObjectURL(url); };
+  document.getElementById('copy').onclick=async()=>{ try{ await navigator.clipboard.writeText(JSON.stringify(cfg(),null,2)); alert('Copied'); }catch{ alert('Copy failed'); } };
+  </script>
+</body>
+</html>
