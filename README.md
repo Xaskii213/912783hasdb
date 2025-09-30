@@ -1,6 +1,6 @@
-# DragonClient Module Manager
+# DragonWare Module Manager
 
-A small **web app** to manage pvp style modules of DragonClient.
+A small **web app** to manage pvp style modules of DragonWare.
 
 ---
 
